@@ -1,6 +1,7 @@
-#SMART EVALUATOR(POWERED BY GOOGLE CLOUD VISION API 
-This a webssite designed for keping in minf the teachers/students in educarional institutions 
-where the evaluators can upload the image(jpg format) of the handwritten answer script 
-along with answer key(correct answer not the key words) 
-->Google Cloud VIsion API fetch the text from the image 
-->this text is then checked for the similaraity by ML model(s-bert) and returns similarity score out of 100
+# SMART EVALUATOR (Powered by Google Cloud Vision API)
+
+This is a website designed keeping in mind the teachers/students in educational institutions, where the evaluators can upload the image (JPG format) of the handwritten answer script along with the answer key (correct answer, not just key words).
+
+→ Google Cloud Vision API fetches the text from the image  
+→ This text is then checked for similarity using an ML model (S-BERT)  
+→ Returns a similarity score out of 100
