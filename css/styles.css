@@ -1,0 +1,386 @@
+body {
+  font-family: Arial, sans-serif;
+  text-align: center;
+  margin: 20px;
+}
+
+h1 {
+  color: #333;
+  margin-bottom: 30px;
+}
+
+h2 {
+  color: #444;
+  margin-bottom: 10px;
+}
+
+.upload-section {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  margin-bottom: 30px;
+}
+
+.upload-container {
+  width: 45%;
+  min-width: 300px;
+  margin: 10px;
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+}
+
+.student-upload {
+  border-left: 5px solid #3498db;
+}
+
+.teacher-upload {
+  border-left: 5px solid #e74c3c;
+}
+
+.compare-section {
+  margin: 20px 0;
+  padding: 15px;
+}
+
+.compare-button {
+  background-color: #2ecc71;
+  color: white;
+  border: none;
+  padding: 12px 25px;
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transition: background-color 0.3s;
+}
+
+.compare-button:hover {
+  background-color: #27ae60;
+}
+
+.loading-indicator {
+  margin-top: 15px;
+  padding: 10px;
+  color: #555;
+  font-style: italic;
+  display: none;
+}
+
+.comparison-container {
+  margin: 30px auto;
+  max-width: 90%;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  display: none;
+}
+
+.comparison-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+
+.comparison-table th, 
+.comparison-table td {
+  padding: 12px;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+
+.comparison-table th {
+  background-color: #f2f2f2;
+  font-weight: bold;
+}
+
+.comparison-table tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.status-excellent {
+  color: #27ae60;
+  font-weight: bold;
+}
+
+.status-good {
+  color: #2980b9;
+  font-weight: bold;
+}
+
+.status-fair {
+  color: #f39c12;
+  font-weight: bold;
+}
+
+.status-poor {
+  color: #e74c3c;
+  font-weight: bold;
+}
+
+.detailed-comparison {
+  margin-top: 30px;
+  border-top: 1px solid #ddd;
+  padding-top: 20px;
+}
+
+.comparison-question {
+  margin-bottom: 25px;
+  padding: 15px;
+  background-color: #f5f5f5;
+  border-radius: 5px;
+}
+
+.comparison-answers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.comparison-student, 
+.comparison-teacher {
+  flex: 1;
+  min-width: 300px;
+  padding: 15px;
+  border-radius: 5px;
+}
+
+.comparison-student {
+  background-color: rgba(52, 152, 219, 0.1);
+  border-left: 4px solid #3498db;
+}
+
+.comparison-teacher {
+  background-color: rgba(231, 76, 60, 0.1);
+  border-left: 4px solid #e74c3c;
+}
+
+.output {
+  margin-top: 20px;
+  padding: 15px;
+  border: 1px solid #ddd;
+  background-color: #f9f9f9;
+  display: inline-block;
+  width: 45%;
+  min-width: 300px;
+  word-wrap: break-word;
+  text-align: left;
+  vertical-align: top;
+  border-radius: 8px;
+  min-height: 200px;
+}
+
+#student-output {
+  border-left: 5px solid #3498db;
+}
+
+#teacher-output {
+  border-left: 5px solid #e74c3c;
+}
+
+#results-container {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+}
+
+.image-preview-container {
+  margin: 20px auto;
+  max-width: 300px;
+  display: none;
+}
+
+#student-image-preview, #teacher-image-preview {
+  max-width: 100%;
+  max-height: 200px;
+  border: 1px solid #ddd;
+  box-shadow: 0 0 5px rgba(0,0,0,0.1);
+}
+
+.file-input-container {
+  margin: 15px 0;
+}
+
+.question-answer {
+  margin-bottom: 15px;
+  padding: 10px;
+  background-color: #f0f0f0;
+  border-radius: 5px;
+}
+
+.question-number {
+  font-weight: bold;
+  color: #2c3e50;
+  margin-bottom: 5px;
+}
+
+.answer-text {
+  margin-left: 15px;
+}
+
+.raw-text-container {
+  margin-top: 20px;
+  border-top: 1px solid #ddd;
+  padding-top: 10px;
+  display: none;
+}
+
+.toggle-raw-text {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 14px;
+  margin: 10px 2px;
+  cursor: pointer;
+  border-radius: 4px;
+  display: none;
+}
+
+/* Feedback Button Styles */
+.feedback-button {
+  background-color: #9b59b6;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  font-size: 14px;
+  cursor: pointer;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transition: background-color 0.3s;
+  margin-top: 10px;
+}
+
+.feedback-button:hover {
+  background-color: #8e44ad;
+}
+
+.feedback-button.detailed {
+  margin-top: 15px;
+  display: block;
+  width: 150px;
+}
+
+/* Modal Styles */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+  background-color: #fff;
+  margin: 5% auto;
+  padding: 25px;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  width: 80%;
+  max-width: 800px;
+  max-height: 85vh;
+  overflow-y: auto;
+  position: relative;
+}
+
+.close-modal {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: color 0.3s;
+}
+
+.close-modal:hover {
+  color: #333;
+}
+
+.feedback-section {
+  margin-bottom: 20px;
+  padding: 15px;
+  background-color: #f9f9f9;
+  border-radius: 6px;
+  border-left: 4px solid #9b59b6;
+}
+
+.feedback-section h3 {
+  color: #333;
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 18px;
+}
+
+.feedback-section ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.feedback-section li {
+  margin-bottom: 8px;
+}
+
+.resource-item {
+  margin-bottom: 15px;
+  padding: 10px;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+}
+
+.resource-item h4 {
+  margin-top: 0;
+  color: #333;
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+
+.resource-item ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.resource-item a {
+  color: #3498db;
+  text-decoration: none;
+  transition: color 0.3s;
+}
+
+.resource-item a:hover {
+  color: #2980b9;
+  text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  .upload-container, .output {
+    width: 90%;
+  }
+  
+  .upload-section, #results-container {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .comparison-answers {
+    flex-direction: column;
+  }
+  
+  .modal-content {
+    width: 95%;
+    margin: 10% auto;
+    padding: 15px;
+  }
+  
+  .feedback-button {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+}

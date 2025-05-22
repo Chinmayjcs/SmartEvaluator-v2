@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Image to Text Converter</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <h1>Image to Text Converter</h1>
+  
+  <div class="upload-section">
+    <div class="upload-container student-upload">
+      <h2>Student Answer Script</h2>
+      <p>Upload student's answer script image:</p>
+      <div class="file-input-container">
+        <label for="student-image-input">Choose an image file:</label>
+        <input type="file" id="student-image-input" accept="image/*" aria-label="Student image file selector" />
+      </div>
+      
+      <div id="student-image-preview-container" class="image-preview-container">
+        <h3>Image Preview</h3>
+        <img id="student-image-preview" alt="Preview of selected student image" />
+      </div>
+    </div>
+    
+    <div class="upload-container teacher-upload">
+      <h2>Teacher Answer Script</h2>
+      <p>Upload teacher's answer script image:</p>
+      <div class="file-input-container">
+        <label for="teacher-image-input">Choose an image file:</label>
+        <input type="file" id="teacher-image-input" accept="image/*" aria-label="Teacher image file selector" />
+      </div>
+      
+      <div id="teacher-image-preview-container" class="image-preview-container">
+        <h3>Image Preview</h3>
+        <img id="teacher-image-preview" alt="Preview of selected teacher image" />
+      </div>
+    </div>
+  </div>
+  
+  <div class="compare-section">
+    <button id="compare-button" class="compare-button">Compare Answers</button>
+    <div id="comparison-loading" class="loading-indicator">Comparing answers...</div>
+  </div>
+  
+  <div id="results-container">
+    <div id="student-output" class="output">Student's extracted text will appear here.</div>
+    <div id="teacher-output" class="output">Teacher's extracted text will appear here.</div>
+  </div>
+  
+  <div id="comparison-results" class="comparison-container">
+    <h2>Comparison Results</h2>
+    <div id="comparison-output"></div>
+  </div>
+  
+  <!-- Feedback Modal -->
+  <div id="feedback-modal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal">&times;</span>
+      <h2>AI Feedback for Question <span id="feedback-question-number"></span></h2>
+      
+      <div class="feedback-section">
+        <h3>Strengths</h3>
+        <ul id="feedback-strengths"></ul>
+      </div>
+      
+      <div class="feedback-section">
+        <h3>Areas for Improvement</h3>
+        <ul id="feedback-improvements"></ul>
+      </div>
+      
+      <div class="feedback-section">
+        <h3>Missing Concepts</h3>
+        <ul id="feedback-missing"></ul>
+      </div>
+      
+      <div class="feedback-section">
+        <h3>Recommended Study Topics</h3>
+        <ul id="feedback-topics"></ul>
+      </div>
+      
+      <div class="feedback-section">
+        <h3>Learning Resources</h3>
+        <div id="feedback-resources"></div>
+      </div>
+      
+      <div id="feedback-loading" class="loading-indicator">
+        Generating AI feedback... This may take a moment.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Store the extracted data in these variables
+    let studentAnswers = [];
+    let teacherAnswers = [];
+    
+    // Function to handle file upload and OCR processing
+    async function processImageUpload(fileInput, previewContainerId, previewId, outputId, isTeacher) {
+      const file = fileInput.files[0];
+      if (!file) {
+        alert('Please select an image.');
+        return;
+      }
+
+      // Display image preview
+      const previewContainer = document.getElementById(previewContainerId);
+      const preview = document.getElementById(previewId);
+      const reader = new FileReader();
+      
+      reader.onload = function(e) {
+        preview.src = e.target.result;
+        previewContainer.style.display = 'block';
+      }
+      
+      reader.readAsDataURL(file);
+
+      const formData = new FormData();
+      formData.append('image', file);
+      formData.append('type', isTeacher ? 'teacher' : 'student');
+
+      try {
+        // Show loading state
+        document.getElementById(outputId).innerText = 'Processing image...';
+        
+        // Send the image to the backend server
+        const response = await fetch('/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        // Receive the extracted text from the server
+        const result = await response.json();
+        const outputDiv = document.getElementById(outputId);
+        
+        if (result.success) {
+          // Store the results in the appropriate variable
+          if (isTeacher) {
+            teacherAnswers = result.questionsAndAnswers || [];
+          } else {
+            studentAnswers = result.questionsAndAnswers || [];
+          }
+          
+          // Display structured question-answer format
+          if (result.questionsAndAnswers && result.questionsAndAnswers.length > 0) {
+            outputDiv.innerHTML = `<h3>${isTeacher ? 'Teacher' : 'Student'}'s Extracted Questions and Answers</h3>`;
+            
+            result.questionsAndAnswers.forEach(qa => {
+              const qaDiv = document.createElement('div');
+              qaDiv.className = 'question-answer';
+              
+              const questionNumberDiv = document.createElement('div');
+              questionNumberDiv.className = 'question-number';
+              questionNumberDiv.textContent = `Question ${qa.questionNumber}:`;
+              
+              const answerTextDiv = document.createElement('div');
+              answerTextDiv.className = 'answer-text';
+              answerTextDiv.textContent = qa.answer;
+              
+              qaDiv.appendChild(questionNumberDiv);
+              qaDiv.appendChild(answerTextDiv);
+              outputDiv.appendChild(qaDiv);
+            });
+            
+            // Log the stored answers to console for verification
+            console.log(`${isTeacher ? 'Teacher' : 'Student'} Answers:`, isTeacher ? teacherAnswers : studentAnswers);
+          } else {
+            outputDiv.innerText = `No questions and answers were detected in the ${isTeacher ? 'teacher' : 'student'}'s image.`;
+          }
+        } else {
+          outputDiv.innerText = result.message || `Failed to extract text from the ${isTeacher ? 'teacher' : 'student'}'s image.`;
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        document.getElementById(outputId).innerText = `Failed to extract text from ${isTeacher ? 'teacher' : 'student'}'s image. Please try again.`;
+      }
+    }
+    
+    // Function to compare student and teacher answers
+    async function compareAnswers() {
+      try {
+        // Show loading indicator
+        document.getElementById('comparison-loading').style.display = 'block';
+        document.getElementById('comparison-results').style.display = 'none';
+        
+        // Make the API call to compare answers
+        const response = await fetch('/api/compare', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        // Check if the response was successful
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error('Error response from server:', errorData);
+          alert(`Error: ${errorData.message || 'Could not compare answers. Please try again.'}`);
+          document.getElementById('comparison-loading').style.display = 'none';
+          return;
+        }
+        
+        // Parse the response
+        const data = await response.json();
+        console.log('Comparison results:', data);
+        
+        if (!data.success) {
+          alert(`Error: ${data.message || 'Could not compare answers. Please try again.'}`);
+          document.getElementById('comparison-loading').style.display = 'none';
+          return;
+        }
+        
+        // Display the results
+        displayComparisonResults(data.results);
+      } catch (error) {
+        console.error('Error comparing answers:', error);
+        alert('Error comparing answers. Please check the console for details.');
+        document.getElementById('comparison-loading').style.display = 'none';
+      }
+    }
+    
+    // Function to display the comparison results
+    function displayComparisonResults(results) {
+      // Hide the loading indicator
+      document.getElementById('comparison-loading').style.display = 'none';
+      
+      // Get the comparison output container
+      const comparisonOutput = document.getElementById('comparison-output');
+      comparisonOutput.innerHTML = '';
+      
+      // Create a table for the results
+      const table = document.createElement('table');
+      table.className = 'comparison-table';
+      
+      // Add the table header
+      const thead = document.createElement('thead');
+      thead.innerHTML = `
+        <tr>
+          <th>Question</th>
+          <th>Similarity (%)</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      `;
+      table.appendChild(thead);
+      
+      // Add the table body
+      const tbody = document.createElement('tbody');
+      
+      // Add each result row
+      results.forEach(result => {
+        const row = document.createElement('tr');
+        
+        // Get status based on similarity score
+        let status = '';
+        let statusClass = '';
+        
+        if (result.similarityScore >= 80) {
+          status = 'Excellent';
+          statusClass = 'status-excellent';
+        } else if (result.similarityScore >= 60) {
+          status = 'Good';
+          statusClass = 'status-good';
+        } else if (result.similarityScore >= 40) {
+          status = 'Fair';
+          statusClass = 'status-fair';
+        } else {
+          status = 'Poor';
+          statusClass = 'status-poor';
+        }
+        
+        // Create the feedback button
+        const feedbackBtn = document.createElement('button');
+        feedbackBtn.className = 'feedback-button';
+        feedbackBtn.innerHTML = 'Get Feedback';
+        feedbackBtn.onclick = () => getAIFeedback(result);
+        
+        // Add the cells
+        row.innerHTML = `
+          <td>Question ${result.questionNumber}</td>
+          <td>${result.similarityScore.toFixed(2)}%</td>
+          <td class="${statusClass}">${status}</td>
+          <td></td>
+        `;
+        
+        // Add the feedback button to the actions cell
+        row.querySelector('td:last-child').appendChild(feedbackBtn);
+        
+        tbody.appendChild(row);
+      });
+      
+      table.appendChild(tbody);
+      comparisonOutput.appendChild(table);
+      
+      // Create a detailed comparison section
+      const detailedSection = document.createElement('div');
+      detailedSection.className = 'detailed-comparison';
+      detailedSection.innerHTML = '<h3>Detailed Comparison</h3>';
+      
+      // Add each question's detailed comparison
+      results.forEach(result => {
+        const questionDiv = document.createElement('div');
+        questionDiv.className = 'comparison-question';
+        
+        questionDiv.innerHTML = `
+          <h4>Question ${result.questionNumber}</h4>
+          <div class="comparison-answers">
+            <div class="comparison-student">
+              <strong>Student's Answer:</strong>
+              <p>${result.studentAnswer || 'No answer provided'}</p>
+            </div>
+            <div class="comparison-teacher">
+              <strong>Teacher's Answer:</strong>
+              <p>${result.teacherAnswer || 'No answer provided'}</p>
+            </div>
+          </div>
+          <div class="similarity-info">
+            <strong>Similarity Score:</strong> ${result.similarityScore.toFixed(2)}%
+          </div>
+        `;
+        
+        // Add a feedback button to the detailed section too
+        const feedbackBtn = document.createElement('button');
+        feedbackBtn.className = 'feedback-button detailed';
+        feedbackBtn.innerHTML = 'Get AI Feedback';
+        feedbackBtn.onclick = () => getAIFeedback(result);
+        questionDiv.appendChild(feedbackBtn);
+        
+        detailedSection.appendChild(questionDiv);
+      });
+      
+      comparisonOutput.appendChild(detailedSection);
+      
+      // Show the results container
+      document.getElementById('comparison-results').style.display = 'block';
+    }
+    
+    // Function to get AI feedback for a question
+    async function getAIFeedback(result) {
+      try {
+        // Show the modal
+        const modal = document.getElementById('feedback-modal');
+        modal.style.display = 'block';
+        
+        // Set the question number
+        document.getElementById('feedback-question-number').textContent = result.questionNumber;
+        
+        // Show loading indicator
+        document.getElementById('feedback-loading').style.display = 'block';
+        
+        // Clear previous feedback
+        document.getElementById('feedback-strengths').innerHTML = '';
+        document.getElementById('feedback-improvements').innerHTML = '';
+        document.getElementById('feedback-missing').innerHTML = '';
+        document.getElementById('feedback-topics').innerHTML = '';
+        document.getElementById('feedback-resources').innerHTML = '';
+        
+        // Call the feedback API
+        const response = await fetch('/api/feedback', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            questionNumber: result.questionNumber,
+            studentAnswer: result.studentAnswer,
+            teacherAnswer: result.teacherAnswer,
+            similarityScore: result.similarityScore
+          })
+        });
+        
+        // Handle errors
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error('Error response from server:', errorData);
+          alert(`Error: ${errorData.message || 'Could not generate feedback. Please try again.'}`);
+          document.getElementById('feedback-loading').style.display = 'none';
+          return;
+        }
+        
+        // Parse the response
+        const data = await response.json();
+        console.log('Feedback response:', data);
+        
+        // Hide loading indicator
+        document.getElementById('feedback-loading').style.display = 'none';
+        
+        // Display the feedback
+        if (data.success) {
+          displayFeedback(data.feedback, data.resources);
+        } else {
+          alert(`Error: ${data.message || 'Could not generate feedback. Please try again.'}`);
+        }
+      } catch (error) {
+        console.error('Error getting feedback:', error);
+        alert('Error getting feedback. Please check the console for details.');
+        document.getElementById('feedback-loading').style.display = 'none';
+      }
+    }
+    
+    // Function to display the feedback in the modal
+    function displayFeedback(feedback, resources) {
+      // Display strengths
+      const strengthsList = document.getElementById('feedback-strengths');
+      feedback.strengths.forEach(strength => {
+        const li = document.createElement('li');
+        li.textContent = strength;
+        strengthsList.appendChild(li);
+      });
+      
+      // Display areas for improvement
+      const improvementsList = document.getElementById('feedback-improvements');
+      feedback.areasForImprovement.forEach(improvement => {
+        const li = document.createElement('li');
+        li.textContent = improvement;
+        improvementsList.appendChild(li);
+      });
+      
+      // Display missing concepts
+      const missingList = document.getElementById('feedback-missing');
+      feedback.missingConcepts.forEach(concept => {
+        const li = document.createElement('li');
+        li.textContent = concept;
+        missingList.appendChild(li);
+      });
+      
+      // Display topics to improve
+      const topicsList = document.getElementById('feedback-topics');
+      feedback.topicsToImprove.forEach(topic => {
+        const li = document.createElement('li');
+        li.textContent = topic;
+        topicsList.appendChild(li);
+      });
+      
+      // Display learning resources
+      const resourcesContainer = document.getElementById('feedback-resources');
+      if (resources && resources.length > 0) {
+        resources.forEach(resource => {
+          const resourceDiv = document.createElement('div');
+          resourceDiv.className = 'resource-item';
+          
+          const topicHeading = document.createElement('h4');
+          topicHeading.textContent = resource.topic;
+          resourceDiv.appendChild(topicHeading);
+          
+          const linksList = document.createElement('ul');
+          resource.links.forEach(link => {
+            const li = document.createElement('li');
+            const a = document.createElement('a');
+            a.href = link.url;
+            a.textContent = link.title;
+            a.target = '_blank';
+            li.appendChild(a);
+            linksList.appendChild(li);
+          });
+          
+          resourceDiv.appendChild(linksList);
+          resourcesContainer.appendChild(resourceDiv);
+        });
+      } else {
+        resourcesContainer.innerHTML = '<p>No specific learning resources found.</p>';
+      }
+    }
+    
+    // Close the modal when the user clicks on the X button
+    document.querySelector('.close-modal').addEventListener('click', function() {
+      document.getElementById('feedback-modal').style.display = 'none';
+    });
+    
+    // Close the modal when the user clicks outside of it
+    window.addEventListener('click', function(event) {
+      const modal = document.getElementById('feedback-modal');
+      if (event.target === modal) {
+        modal.style.display = 'none';
+      }
+    });
+    
+    // Event listener for student image upload
+    document.getElementById('student-image-input').addEventListener('change', function() {
+      processImageUpload(this, 'student-image-preview-container', 'student-image-preview', 'student-output', false);
+    });
+    
+    // Event listener for teacher image upload
+    document.getElementById('teacher-image-input').addEventListener('change', function() {
+      processImageUpload(this, 'teacher-image-preview-container', 'teacher-image-preview', 'teacher-output', true);
+    });
+    
+    // Event listener for compare button
+    document.getElementById('compare-button').addEventListener('click', compareAnswers);
+    
+    // Hide loading indicator initially
+    document.getElementById('comparison-loading').style.display = 'none';
+    document.getElementById('comparison-results').style.display = 'none';
+  </script>
+</body>
+</html>
